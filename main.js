@@ -71,26 +71,28 @@ function playBlipSound() {
     osc.stop(audioContext.currentTime + 0.1);
 }
 
-function triggerAudio() {
-    initAudio();
-    const welcomeAudio = document.getElementById('welcomeAudio');
-    if (welcomeAudio && welcomeAudio.paused && !welcomeAudio.ended) {
-        welcomeAudio.play().catch(e => {
-            // If the browser blocks it, wait for interaction
-            ['click', 'mousemove', 'scroll', 'touchstart'].forEach(eventType => {
-                document.body.addEventListener(eventType, () => {
-                    initAudio();
-                    welcomeAudio.play();
-                }, { once: true });
-            });
-        });
-    }
-}
+const splash = document.getElementById('splash');
+const enterBtn = document.getElementById('enter-btn');
 
-// Try to play as soon as the page is fully ready
-window.addEventListener('load', triggerAudio);
-window.addEventListener('scroll', triggerAudio, { once: true });
-window.addEventListener('mousemove', triggerAudio, { once: true });
+// Show the ENTER button after the fake "loading" is done
+setTimeout(() => {
+    if(enterBtn) enterBtn.classList.add('show');
+}, 2200);
+
+if(enterBtn) {
+    enterBtn.addEventListener('click', () => {
+        // Trigger all audio once system is initialized by user
+        initAudio();
+        const welcomeAudio = document.getElementById('welcomeAudio');
+        if (welcomeAudio) welcomeAudio.play();
+        
+        // Hide splash screen
+        if(splash) splash.classList.add('hide');
+        
+        // Final cleanup
+        setTimeout(() => splash.remove(), 1200);
+    });
+}
 
 const welcomeAudio = document.getElementById('welcomeAudio');
 const bgMusic = document.getElementById('bgMusic');
