@@ -76,21 +76,30 @@ function playBlipSound() {
     document.body.addEventListener(eventType, () => {
         initAudio();
         
-        // Grab our background music tag
-        const bgMusic = document.getElementById('bgMusic');
-        if (bgMusic && bgMusic.paused) {
-            bgMusic.volume = 0.3;
-            // Play it, and silently handle the promise error if the browser still denies it
-            bgMusic.play().catch(e => console.log("Browser autoplay policy prevented audio. Awaiting direct interaction."));
+        // Let the welcome message play out if it's there
+        const welcomeAudio = document.getElementById('welcomeAudio');
+        if (welcomeAudio && welcomeAudio.paused && !welcomeAudio.ended) {
+            welcomeAudio.play().catch(e => console.log("Browser blocked welcome audio on load."));
         }
     }, { once: true });
 });
 
-// Audio toggle button listener
+const welcomeAudio = document.getElementById('welcomeAudio');
 const bgMusic = document.getElementById('bgMusic');
 const audioBtn = document.getElementById('audio-btn');
-let isMusicPlaying = false; // We start un-clicked initially
+let isMusicPlaying = false; 
 
+// Chain ambient background to play endlessly right after the welcome message concludes
+if (welcomeAudio && bgMusic) {
+    welcomeAudio.addEventListener('ended', () => {
+        bgMusic.volume = 0.3;
+        bgMusic.play().catch(e => console.log("Awaiting interaction for ambient."));
+        isMusicPlaying = true;
+        if(audioBtn) audioBtn.innerHTML = '🔊';
+    });
+}
+
+// Audio toggle button listener controls the endless ambient track
 if (audioBtn && bgMusic) {
     audioBtn.addEventListener('click', () => {
         if (isMusicPlaying) {
