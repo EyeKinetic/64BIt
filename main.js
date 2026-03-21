@@ -71,18 +71,26 @@ function playBlipSound() {
     osc.stop(audioContext.currentTime + 0.1);
 }
 
-// Ensure audio (both the ambient synth & HTML5 Audio element) starts upon any user engagement
-['click', 'mousemove', 'scroll', 'touchstart'].forEach(eventType => {
-    document.body.addEventListener(eventType, () => {
-        initAudio();
-        
-        // Let the welcome message play out if it's there
-        const welcomeAudio = document.getElementById('welcomeAudio');
-        if (welcomeAudio && welcomeAudio.paused && !welcomeAudio.ended) {
-            welcomeAudio.play().catch(e => console.log("Browser blocked welcome audio on load."));
-        }
-    }, { once: true });
-});
+function triggerAudio() {
+    initAudio();
+    const welcomeAudio = document.getElementById('welcomeAudio');
+    if (welcomeAudio && welcomeAudio.paused && !welcomeAudio.ended) {
+        welcomeAudio.play().catch(e => {
+            // If the browser blocks it, wait for interaction
+            ['click', 'mousemove', 'scroll', 'touchstart'].forEach(eventType => {
+                document.body.addEventListener(eventType, () => {
+                    initAudio();
+                    welcomeAudio.play();
+                }, { once: true });
+            });
+        });
+    }
+}
+
+// Try to play as soon as the page is fully ready
+window.addEventListener('load', triggerAudio);
+window.addEventListener('scroll', triggerAudio, { once: true });
+window.addEventListener('mousemove', triggerAudio, { once: true });
 
 const welcomeAudio = document.getElementById('welcomeAudio');
 const bgMusic = document.getElementById('bgMusic');
