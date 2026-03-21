@@ -59,9 +59,18 @@
     opacity: 0;
     visibility: hidden;
     transition: all 0.5s ease;
-    border-color: var(--c);
-    color: var(--c);
+    border: 2px solid var(--c) !important;
+    background: transparent !important;
+    color: var(--c) !important;
+    font-weight: 800;
+    letter-spacing: 2px;
     box-shadow: 0 0 15px var(--c);
+    cursor: pointer;
+}
+
+#enter-btn:hover {
+    background: var(--c) !important;
+    color: #000 !important;
 }
 
 #enter-btn.show {
