@@ -1,23 +1,24 @@
-# Auto-commit and push script
-# Run this script to automatically sync your changes to GitHub every 60 seconds.
+# Hey! I'm your friendly auto-sync bot 🤖
+# Just run me in the background and I'll make sure all your hard work 
+# gets safely pushed to GitHub every 60 seconds without you lifting a finger!
 
-Write-Host "Started auto-sync script. Press Ctrl+C to stop." -ForegroundColor Green
+Write-Host "Started auto-sync script. Just leave me running and press Ctrl+C if you need me to stop." -ForegroundColor Green
 
 while ($true) {
-    # Check if there are any changes
+    # Let's peek and see if you changed anything...
     $status = git status --porcelain
     
     if (![string]::IsNullOrWhiteSpace($status)) {
-        Write-Host "Changes detected. Committing and pushing..." -ForegroundColor Yellow
+        Write-Host "Ooh, I see some changes! Committing and pushing them up now..." -ForegroundColor Yellow
         git add .
         
         $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        git commit -m "Auto-commit at $date"
+        git commit -m "Auto-commit at $date. You're doing great!"
         git push origin main
         
-        Write-Host "Sync complete at $date" -ForegroundColor Green
+        Write-Host "All synced up safely at $date! 😎" -ForegroundColor Green
     }
     
-    # Wait for 60 seconds before checking again
+    # I'll take a quick 60-second nap before checking again
     Start-Sleep -Seconds 60
 }

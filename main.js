@@ -1,98 +1,324 @@
-let ax,gn,ainit=0;
-function ia(){
-if(ainit)return;ainit=1;
-const AC=window.AudioContext||window.webkitAudioContext;ax=new AC();
-let o1=ax.createOscillator(),o2=ax.createOscillator();gn=ax.createGain();let f=ax.createBiquadFilter();
-o1.frequency.value=80;o2.frequency.value=160;f.type='lowpass';f.frequency.value=200;gn.gain.value=0.05;
-o1.connect(gn);o2.connect(gn);gn.connect(f);f.connect(ax.destination);o1.start();o2.start();
-let l=ax.createOscillator(),lg=ax.createGain();l.frequency.value=0.1;lg.gain.value=0.02;
-l.connect(lg);lg.connect(gn.gain);l.start();
-}
-function bp(){
-if(!ax)return;let o=ax.createOscillator(),g=ax.createGain();
-o.frequency.setValueAtTime(600,ax.currentTime);o.frequency.exponentialRampToValueAtTime(300,ax.currentTime+.1);
-g.gain.setValueAtTime(.1,ax.currentTime);g.gain.exponentialRampToValueAtTime(.001,ax.currentTime+.1);
-o.connect(g);g.connect(ax.destination);o.start();o.stop(ax.currentTime+.1);
-}
-['click','mousemove','scroll'].forEach(e=>document.body.addEventListener(e,()=>{
-    ia();
-},{once:1}));
+/*
+======================================================
+  Main Application Logic 
+  Handles Animations, Audio Routing, and Interactions
+  Crafted with care!
+======================================================
+*/
 
-// Audio toggle functionality
-const bg = document.getElementById('bgMusic');
+let audioContext;
+let gainNode;
+let audioInitialized = false;
+
+/**
+ * Initializes the Web Audio API synthesizer used for background ambience
+ * and UI interaction sound effects.
+ */
+function initAudio() {
+    if (audioInitialized) return;
+    audioInitialized = true;
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioContext = new AudioContext();
+
+    // Create a deep ambient drone
+    let osc1 = audioContext.createOscillator();
+    let osc2 = audioContext.createOscillator();
+    gainNode = audioContext.createGain();
+    let filter = audioContext.createBiquadFilter();
+
+    osc1.frequency.value = 80;
+    osc2.frequency.value = 160;
+    
+    filter.type = 'lowpass';
+    filter.frequency.value = 200;
+    
+    gainNode.gain.value = 0.05;
+
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(filter);
+    filter.connect(audioContext.destination);
+    
+    osc1.start();
+    osc2.start();
+
+    // Add a pulsing low-frequency oscillation for depth
+    let lfo = audioContext.createOscillator();
+    let lfoGain = audioContext.createGain();
+    lfo.frequency.value = 0.1;
+    lfoGain.gain.value = 0.02;
+
+    lfo.connect(lfoGain);
+    lfoGain.connect(gainNode.gain);
+    lfo.start();
+}
+
+/**
+ * Triggers a quick synth "blip" sound effect. Usually used on clicks.
+ */
+function playBlipSound() {
+    if (!audioContext) return;
+    
+    let osc = audioContext.createOscillator();
+    let gain = audioContext.createGain();
+    
+    osc.frequency.setValueAtTime(600, audioContext.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
+    
+    gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+    
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    
+    osc.start();
+    osc.stop(audioContext.currentTime + 0.1);
+}
+
+// Ensure audio (both the ambient synth & HTML5 Audio element) starts upon any user engagement
+['click', 'mousemove', 'scroll', 'touchstart'].forEach(eventType => {
+    document.body.addEventListener(eventType, () => {
+        initAudio();
+        
+        // Grab our background music tag
+        const bgMusic = document.getElementById('bgMusic');
+        if (bgMusic && bgMusic.paused) {
+            bgMusic.volume = 0.3;
+            // Play it, and silently handle the promise error if the browser still denies it
+            bgMusic.play().catch(e => console.log("Browser autoplay policy prevented audio. Awaiting direct interaction."));
+        }
+    }, { once: true });
+});
+
+// Audio toggle button listener
+const bgMusic = document.getElementById('bgMusic');
 const audioBtn = document.getElementById('audio-btn');
-let isPlaying = false;
+let isMusicPlaying = false; // We start un-clicked initially
 
-if(audioBtn && bg) {
+if (audioBtn && bgMusic) {
     audioBtn.addEventListener('click', () => {
-        if(isPlaying) {
-            bg.pause();
+        if (isMusicPlaying) {
+            bgMusic.pause();
             audioBtn.innerHTML = '🔇';
         } else {
-            bg.volume = 0.3;
-            bg.play().catch(e => console.error("Audio playback failed:", e));
+            bgMusic.volume = 0.3;
+            bgMusic.play().catch(e => console.error("Audio playback completely failed:", e));
             audioBtn.innerHTML = '🔊';
         }
-        isPlaying = !isPlaying;
+        isMusicPlaying = !isMusicPlaying;
     });
 }
 
-document.querySelectorAll('.clk').forEach(e=>e.addEventListener('click',function(v){
-bp();let r=document.createElement('span');r.className='ripple';
-let c=this.getBoundingClientRect();r.style.left=v.clientX-c.left+'px';r.style.top=v.clientY-c.top+'px';
-this.appendChild(r);setTimeout(()=>r.remove(),600);
-}));
-
-const dt=document.getElementById('dot'),tr=document.getElementById('trail');
-let mx=0,my=0,tx=0,ty=0;
-document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dt.style.transform=`translate(${mx-4}px,${my-4}px)`;});
-function cA(){tx+=(mx-tx)*.15;ty+=(my-ty)*.15;tr.style.left=tx+'px';tr.style.top=ty+'px';requestAnimationFrame(cA);}cA();
-document.querySelectorAll('a,.btn,.int').forEach(e=>{
-e.addEventListener('mouseenter',()=>{tr.style.transform='translate(-50%,-50%) scale(1.5)';tr.style.borderColor='var(--c)';});
-e.addEventListener('mouseleave',()=>{tr.style.transform='translate(-50%,-50%) scale(1)';tr.style.borderColor='var(--p)';});
+// Attach ripple effects and sound to clickable stuff
+document.querySelectorAll('.clk').forEach(element => {
+    element.addEventListener('click', function(e) {
+        playBlipSound();
+        
+        let ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        let rect = this.getBoundingClientRect();
+        
+        ripple.style.left = (e.clientX - rect.left) + 'px';
+        ripple.style.top = (e.clientY - rect.top) + 'px';
+        
+        this.appendChild(ripple);
+        
+        // Clean up ripple element from DOM
+        setTimeout(() => ripple.remove(), 600);
+    });
 });
 
-window.addEventListener('scroll',()=>{
-let s=document.body.scrollTop||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-document.documentElement.clientHeight;
-document.getElementById('progress').style.width=(s/h*100)+'%';
+/**
+ * Custom Cursor Logic
+ */
+const dot = document.getElementById('dot');
+const trail = document.getElementById('trail');
+let mouseX = 0, mouseY = 0, trailX = 0, trailY = 0;
+
+document.addEventListener('mousemove', e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    if(dot) dot.style.transform = `translate(${mouseX - 4}px, ${mouseY - 4}px)`;
 });
 
-const cv=document.getElementById('cvs'),cx=cv.getContext('2d');
-let w,h,pts=[];
-function rs(){w=cv.width=window.innerWidth;h=cv.height=window.innerHeight;}
-window.addEventListener('resize',rs);rs();
-for(let i=0;i<80;i++)pts.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5});
-function pA(){
-cx.clearRect(0,0,w,h);
-for(let i=0;i<pts.length;i++){
-let p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;
-for(let j=i+1;j<pts.length;j++){
-let d=Math.hypot(p.x-pts[j].x,p.y-pts[j].y);
-if(d<150){cx.beginPath();cx.strokeStyle=`rgba(157,0,255,${1-d/150})`;cx.lineWidth=.5;cx.moveTo(p.x,p.y);cx.lineTo(pts[j].x,pts[j].y);cx.stroke();}
+function animateTrail() {
+    trailX += (mouseX - trailX) * 0.15;
+    trailY += (mouseY - trailY) * 0.15;
+    if(trail) {
+        trail.style.left = trailX + 'px';
+        trail.style.top = trailY + 'px';
+    }
+    requestAnimationFrame(animateTrail);
 }
-cx.beginPath();cx.arc(p.x,p.y,1,0,Math.PI*2);cx.fillStyle='rgba(0,243,255,.5)';cx.fill();
-} requestAnimationFrame(pA);
-} pA();
+// Start cursor animation loop
+animateTrail();
 
-const ob=new IntersectionObserver(e=>{
-e.forEach(n=>{if(n.isIntersecting){
-n.target.classList.add('act');
-let c=n.target.querySelectorAll('.cnt');
-if(c.length&&!n.target.dataset.d){
-n.target.dataset.d=1;c.forEach(x=>{
-let t=+x.getAttribute('data-t'),s=x.getAttribute('data-s'),cv=0;
-let u=()=>{if(cv<t){cv+=t/40;x.innerText=Math.ceil(cv)+s;setTimeout(u,40);}else x.innerText=t+s;};u();
-});}}});},{threshold:.1,rootMargin:"0px 0px -50px 0px"});
-document.querySelectorAll('.rev').forEach(e=>ob.observe(e));
-
-window.addEventListener('load',()=>{
-let t="We Build Digital Experiences",el=document.getElementById('tw'),i=0;
-el.style.borderRightColor='var(--c)';
-function tw(){if(i<t.length){el.innerHTML+=t.charAt(i++);setTimeout(tw,80);}else{
-document.querySelectorAll('.intro').forEach((e,x)=>{e.style.transition='all .8s ease '+(x*.2)+'s';e.style.opacity=1;e.style.transform='translateY(0)';});
-setTimeout(()=>el.style.borderRightColor='transparent',2000);
-}} setTimeout(tw,500);
+// Expand cursor when hovering interactive elements
+document.querySelectorAll('a, .btn, .int').forEach(element => {
+    element.addEventListener('mouseenter', () => {
+        if(trail) {
+            trail.style.transform = 'translate(-50%, -50%) scale(1.5)';
+            trail.style.borderColor = 'var(--c)';
+        }
+    });
+    element.addEventListener('mouseleave', () => {
+        if(trail) {
+            trail.style.transform = 'translate(-50%, -50%) scale(1)';
+            trail.style.borderColor = 'var(--p)';
+        }
+    });
 });
-document.addEventListener('mousemove',e=>{
-document.querySelector('.shapes').style.transform=`translate(${(window.innerWidth-e.pageX*2)/90}px,${(window.innerHeight-e.pageY*2)/90}px)`;
+
+// Navigation Progress Bar
+window.addEventListener('scroll', () => {
+    let scrollPos = document.body.scrollTop || document.documentElement.scrollTop;
+    let viewHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    let progressBar = document.getElementById('progress');
+    if(progressBar) {
+        progressBar.style.width = (scrollPos / viewHeight * 100) + '%';
+    }
+});
+
+/**
+ * Interactive Background Canvas Animation
+ */
+const cvs = document.getElementById('cvs');
+let ctx, width, height, points = [];
+
+if (cvs) {
+    ctx = cvs.getContext('2d');
+    
+    function resizeCanvas() {
+        width = cvs.width = window.innerWidth;
+        height = cvs.height = window.innerHeight;
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    // Create random floating points
+    for(let i = 0; i < 80; i++) {
+        points.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5
+        });
+    }
+
+    // Draw lines between close points
+    function animateParticles() {
+        ctx.clearRect(0, 0, width, height);
+        
+        for(let i = 0; i < points.length; i++) {
+            let p = points[i];
+            
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            // Bounce off walls
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
+            
+            for(let j = i + 1; j < points.length; j++) {
+                let dist = Math.hypot(p.x - points[j].x, p.y - points[j].y);
+                if(dist < 150) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(157, 0, 255, ${1 - dist / 150})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(points[j].x, points[j].y);
+                    ctx.stroke();
+                }
+            }
+            // Draw particle dot
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 1, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 243, 255, 0.5)';
+            ctx.fill();
+        } 
+        requestAnimationFrame(animateParticles);
+    } 
+    animateParticles();
+}
+
+/**
+ * Scroll Observer (Fades in elements as they scroll into view)
+ */
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if(entry.isIntersecting) {
+            entry.target.classList.add('act');
+            
+            // Trigger number counters
+            let counters = entry.target.querySelectorAll('.cnt');
+            if(counters.length && !entry.target.dataset.done) {
+                entry.target.dataset.done = 'true';
+                
+                counters.forEach(counter => {
+                    let targetVal = +counter.getAttribute('data-t');
+                    let suffix = counter.getAttribute('data-s') || '';
+                    let currentVal = 0;
+                    
+                    let updateCounter = () => {
+                        if(currentVal < targetVal) {
+                            currentVal += targetVal / 40;
+                            counter.innerText = Math.ceil(currentVal) + suffix;
+                            setTimeout(updateCounter, 40);
+                        } else {
+                            counter.innerText = targetVal + suffix;
+                        }
+                    };
+                    updateCounter();
+                });
+            }
+        }
+    });
+}, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+document.querySelectorAll('.rev').forEach(element => observer.observe(element));
+
+/**
+ * Typewriter Effect on Page Load
+ */
+window.addEventListener('load', () => {
+    let text = "We Build Digital Experiences";
+    let typewriterEl = document.getElementById('tw');
+    let index = 0;
+    
+    if (typewriterEl) {
+        typewriterEl.style.borderRightColor = 'var(--c)';
+        
+        function typeWriter() {
+            if(index < text.length) {
+                typewriterEl.innerHTML += text.charAt(index++);
+                setTimeout(typeWriter, 80); // Typing speed
+            } else {
+                // Reveal other intro elements
+                document.querySelectorAll('.intro').forEach((el, idx) => {
+                    el.style.transition = 'all 0.8s ease ' + (idx * 0.2) + 's';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                });
+                
+                // Hide cursor blink after 2 seconds
+                setTimeout(() => { typewriterEl.style.borderRightColor = 'transparent'; }, 2000);
+            }
+        } 
+        // Delay start slightly
+        setTimeout(typeWriter, 500);
+    }
+});
+
+/**
+ * Parallax shape movement on mouse move
+ */
+document.addEventListener('mousemove', e => {
+    const shapes = document.querySelector('.shapes');
+    if (shapes) {
+        let x = (window.innerWidth - e.pageX * 2) / 90;
+        let y = (window.innerHeight - e.pageY * 2) / 90;
+        shapes.style.transform = `translate(${x}px, ${y}px)`;
+    }
 });
