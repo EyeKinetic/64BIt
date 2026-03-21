@@ -82,6 +82,22 @@
 @keyframes loadProgress {
     to { width: 100%; }
 }
+
+/* Mobile Adjustments for Splash */
+@media screen and (max-width: 768px) {
+    .splash-title {
+        font-size: 1.5rem;
+        letter-spacing: 3px;
+    }
+    .loader {
+        width: 180px;
+    }
+    #enter-btn {
+        width: 80%;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+}
 :root {
     --bg: #030305;
     --c: #00f3ff;
