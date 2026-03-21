@@ -28,8 +28,8 @@ nav{position:fixed;top:0;width:100%;padding:20px 50px;display:flex;justify-conte
 section{padding:100px 10vw;min-height:100vh;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1}
 .title{font-size:3rem;margin-bottom:50px;text-align:center;color:transparent;-webkit-text-stroke:1px var(--p);text-shadow:0 0 20px rgba(157,0,255,.4)}
 #hero{align-items:center;text-align:center;padding-top:150px}
-.htitle{font-size:4rem;margin-bottom:20px;min-height:5rem;text-shadow:0 0 20px rgba(0,243,255,.5);border-right:4px solid var(--c);white-space:nowrap;overflow:hidden;width:0}
-.hsub{font-size:1.5rem;color:#aaa;margin-bottom:50px;opacity:0;transform:translateY(20px)}
+.htitle{font-size:4rem;margin-bottom:20px;min-height:5rem;text-shadow:0 0 20px rgba(0,243,255,.5);border-right:4px solid var(--c);white-space:pre-wrap;width:fit-content;margin-left:auto;margin-right:auto}
+.hsub{font-size:1.8rem;color:#aaa;margin-bottom:50px;opacity:0;transform:translateY(20px);font-weight:600}
 .hctas{display:flex;gap:20px;opacity:0;transform:translateY(20px)}
 .btn{padding:15px 35px;font-family:'Orbitron';font-weight:700;text-decoration:none;color:#fff;border:2px solid var(--c);border-radius:5px;position:relative;overflow:hidden;transition:.3s;text-transform:uppercase}
 .btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:var(--c);transition:.3s;z-index:-1}
@@ -95,6 +95,9 @@ section{padding:100px 10vw;min-height:100vh;display:flex;flex-direction:column;j
 <div class="shapes"><div class="shape s1"></div><div class="shape s2"></div></div>
 <nav><div class="logo">64Bit</div><div class="links"><a href="#hero" class="clk">Home</a><a href="#do" class="clk">What We Do</a><a href="#work" class="clk">Our Work</a><a href="#contact" class="clk">Contact</a></div></nav>
 
+<audio id="bgMusic" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_c97669a7c3.mp3" type="audio/mpeg">
+</audio>
 <section id="hero">
 <h1 class="htitle" id="tw"></h1>
 <p class="hsub intro">Websites. Discord Bots. Limitless Ideas.</p>
@@ -166,7 +169,14 @@ o.frequency.setValueAtTime(600,ax.currentTime);o.frequency.exponentialRampToValu
 g.gain.setValueAtTime(.1,ax.currentTime);g.gain.exponentialRampToValueAtTime(.001,ax.currentTime+.1);
 o.connect(g);g.connect(ax.destination);o.start();o.stop(ax.currentTime+.1);
 }
-['click','mousemove','scroll'].forEach(e=>document.body.addEventListener(e,ia,{once:1}));
+['click','mousemove','scroll'].forEach(e=>document.body.addEventListener(e,()=>{
+    ia();
+    const bg = document.getElementById('bgMusic');
+    if (bg && bg.paused) {
+        bg.volume = 0.3;
+        bg.play().catch(console.error);
+    }
+},{once:1}));
 document.querySelectorAll('.clk').forEach(e=>e.addEventListener('click',function(v){
 bp();let r=document.createElement('span');r.className='ripple';
 let c=this.getBoundingClientRect();r.style.left=v.clientX-c.left+'px';r.style.top=v.clientY-c.top+'px';
