@@ -93,6 +93,7 @@ let isMusicPlaying = false;
 if (welcomeAudio && bgMusic) {
     welcomeAudio.addEventListener('ended', () => {
         bgMusic.volume = 0.3;
+        if (bgMusic.currentTime === 0) bgMusic.currentTime = 60;
         bgMusic.play().catch(e => console.log("Awaiting interaction for ambient."));
         isMusicPlaying = true;
         if(audioBtn) audioBtn.innerHTML = '🔊';
@@ -107,6 +108,7 @@ if (audioBtn && bgMusic) {
             audioBtn.innerHTML = '🔇';
         } else {
             bgMusic.volume = 0.3;
+            if (bgMusic.currentTime === 0) bgMusic.currentTime = 60;
             bgMusic.play().catch(e => console.error("Audio playback completely failed:", e));
             audioBtn.innerHTML = '🔊';
         }
