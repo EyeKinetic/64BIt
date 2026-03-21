@@ -1,10 +1,5 @@
-/*
-======================================================
-  Main Application Logic 
-  Handles Animations, Audio Routing, and Interactions
-  Crafted with care!
-======================================================
-*/
+// Main Application Logic
+// Handles Animations, Audio Routing, and Interactions
 
 let audioContext;
 let gainNode;
